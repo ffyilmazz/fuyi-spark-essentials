@@ -6,30 +6,34 @@ import org.apache.spark.sql.types._
 object DataFramesBasics extends App {
 
   // creating a SparkSession
-  val spark = SparkSession.builder()
+  val spark_session = SparkSession.builder()
     .appName("DataFrames Basics")
     .config("spark.master", "local")
     .getOrCreate()
 
   // reading a DF
-  val firstDF = spark.read
+  val firstDF = spark_session.read
     .format("json")
-    .option("inferSchema", "true")
+    .option("inferSchema", "true") // all column of dataframe will be figured out from json structure
     .load("src/main/resources/data/cars.json")
-
   // showing a DF
+  println("> firstDF.show()")
   firstDF.show()
-  firstDF.printSchema()
+  println("> firstDF.printSchema()")
+  firstDF.printSchema() // description of every column
 
-  // get rows
+  // get rows => array of rows
+  println("> firstDF.take(10).foreach(println)")
   firstDF.take(10).foreach(println)
 
   // spark types
-  val longType = LongType
+  val longType = LongType //case objects? O ile gosteriliyormus IntelliJ
 
   // schema
+  // - spark yanlis schema kullanabilir eger ".option("inferSchema", "true")" kullanilirsa
+  // - bu datatype'lar runtime'da kullaniliyormus. type safe data set'ler ile compile time sonra gosterecekmis
   val carsSchema = StructType(Array(
-    StructField("Name", StringType),
+    StructField("Name", StringType), // StructField("Name", StringType, nullable = true) => eger null degerler varsa (default true)
     StructField("Miles_per_Gallon", DoubleType),
     StructField("Cylinders", LongType),
     StructField("Displacement", DoubleType),
@@ -40,16 +44,19 @@ object DataFramesBasics extends App {
     StructField("Origin", StringType)
   ))
 
-  // obtain a schema
+  // obtain a schema of existing dataset
   val carsDFSchema = firstDF.schema
+  println(carsDFSchema) // carSchema'ya benzer birsey yazdiracak
 
   // read a DF with your schema
-  val carsDFWithSchema = spark.read
+  val carsDFWithSchema = spark_session.read
     .format("json")
     .schema(carsDFSchema)
     .load("src/main/resources/data/cars.json")
 
   // create rows by hand
+  // - Row : apply factory method?
+  // - Row can contain anythig at all
   val myRow = Row("chevrolet chevelle malibu",18,8,307,130,3504,12.0,"1970-01-01","USA")
 
   // create DF from tuples
@@ -65,15 +72,21 @@ object DataFramesBasics extends App {
     ("pontiac catalina",14,8,455,225,4425,10.0,"1970-01-01","USA"),
     ("amc ambassador dpl",15,8,390,190,3850,8.5,"1970-01-01","USA")
   )
-  val manualCarsDF = spark.createDataFrame(cars) // schema auto-inferred
+  // createDataFrame is heavily overloaded => createDataFrame[A <: Product](data: Seq[A](implicit ...) olani kullandi
+  // kendi schema'ni kullanmak icin opsiyon yok. Cunku tuple type'lari compile time'da => spark otomatik olarak schema olusturuyormus
+  val manualCarsDF = spark_session.createDataFrame(cars) // schema auto-inferred
 
   // note: DFs have schemas, rows do not
 
   // create DFs with implicits
-  import spark.implicits._
+  import spark_session.implicits._
   val manualCarsDFWithImplicits = cars.toDF("Name", "MPG", "Cylinders", "Displacement", "HP", "Weight", "Acceleration", "Year", "CountryOrigin")
 
-
+  //
+  println(">>> manualCarsDF.printSchema()")
+  manualCarsDF.printSchema()
+  println("-----")
+  manualCarsDFWithImplicits.printSchema()
   /**
     * Exercise:
     * 1) Create a manual DF describing smartphones
@@ -98,7 +111,7 @@ object DataFramesBasics extends App {
   smartphonesDF.show()
 
   // 2
-  val moviesDF = spark.read
+  val moviesDF = spark_session.read
     .format("json")
     .option("inferSchema", "true")
     .load("src/main/resources/data/movies.json")
