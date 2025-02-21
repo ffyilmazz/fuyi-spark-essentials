@@ -3,7 +3,7 @@ package part2dataframes
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.types._
 
-object DataSources extends App {
+object S02_L08_DataSources extends App {
 
   val spark = SparkSession.builder()
     .appName("Data Sources and Formats")

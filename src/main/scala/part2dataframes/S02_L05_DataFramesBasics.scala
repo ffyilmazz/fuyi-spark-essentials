@@ -3,7 +3,7 @@ package part2dataframes
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.types._
 
-object DataFramesBasics extends App {
+object S02_L05_DataFramesBasics extends App {
 
   // creating a SparkSession
   val spark_session = SparkSession.builder()
